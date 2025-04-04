@@ -1,6 +1,16 @@
 use regex::Regex;
 use std::fs;
 
+#[macro_export]
+macro_rules! dev_println {
+    ($( $args:expr ),*) => {
+        #[cfg(feature = "dev_print")]
+        {
+            println!($( $args ),*);
+        }
+    };
+}
+
 fn parse_with_delimiters(input: &str, on: &str, off: &str) -> String {
     let mut result = String::new();
     let mut in_on_state = true; // Track whether we're in the "on" state
@@ -38,23 +48,24 @@ fn parse_with_delimiters(input: &str, on: &str, off: &str) -> String {
 //}
 
 fn main() -> std::io::Result<()> {
-    //let text = "Here are some numbers: mul(1,456), 789.";
+    let args: Vec<String> = std::env::args().collect();
+
     let text = fs::read_to_string("input.txt")?;
-    let my_str: &str = &text;
+    let mut my_str = text;
 
-    let on = "do()";
-    let off = "don't()";
-    
-    let result = parse_with_delimiters(my_str, on, off);
-    let my_str: &str = &result;
-
+    // check if we are running part 1 or part 2, default to part 1
+    if args.len() > 1 && args[1] == "part2" {
+        let on = "do()";
+        let off = "don't()";
+        my_str = parse_with_delimiters(&my_str, on, off);
+    } 
 
     // Define a regex pattern to match numbers
     let re = Regex::new(r"mul\((\d{1,3}),(\d{1,3})\)").unwrap();  
 
     let mut total: i32 = 0;
     // Iterate over the matches
-    for mat in re.find_iter(my_str) {
+    for mat in re.find_iter(&my_str) {
         // Get the matched substring
         let matched_str = mat.as_str();
 
@@ -64,12 +75,12 @@ fn main() -> std::io::Result<()> {
             let num2: i32 = captures[2].parse().unwrap();
 
             // Convert captures[1] and captures[2] to String for printing
-            let num1_str = captures[1].to_string();
-            let num2_str = captures[2].to_string();
+            let _num1_str = captures[1].to_string();
+            let _num2_str = captures[2].to_string();
 
             // Print the result
-            println!("Found match: mul({}, {}), num1 = {}, num2 = {}", 
-                     num1_str, num2_str, num1, num2);
+            dev_println!("Found match: mul({}, {}), num1 = {}, num2 = {}", 
+                     _num1_str, _num2_str, num1, num2);
             total += num1*num2;
 
         }

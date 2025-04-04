@@ -5,3 +5,6 @@ edition = "2021"
 
 [dependencies]
 regex = "1"
+
+[features]
+dev_print = [] # Enable development logging
