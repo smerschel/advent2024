@@ -1,0 +1,10 @@
+[package]
+name = "advent05"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+utils = { path = "../utils" }
+
+[features]
+dev_print = ["utils/dev_print"]

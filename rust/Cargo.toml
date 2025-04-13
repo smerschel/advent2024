@@ -1,0 +1,10 @@
+[workspace]
+resolver = "2"  # Use resolver "2" to match edition 2021
+members = [
+    "hello_world",
+    "advent01",
+    "advent02",
+    "advent03",
+    "advent04",
+    "advent05",
+    "utils"]
