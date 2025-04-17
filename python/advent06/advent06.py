@@ -118,6 +118,8 @@ def run_sim(data, startrow, startcol, direction):
     while not at_exit(curcol, currow, len(data[0]), len(data)):
         curcol, currow, direction = mark_and_move(curcol, currow, direction, data, False)
         loopcount += 1
+        # I'm not sure if this loop count threshold is high enough, to be mathematically certain, you would 
+        # probably beed to touch every square multiple times (directions) to be sure it's a loop
         if loopcount > (len(data) * len(data[0])):  
             return True
     return False
@@ -165,6 +167,10 @@ if __name__ == "__main__":
                         part2count += 1
             curcol, currow, direction = mark_and_move(curcol, currow, direction, data, False)
 
+        # realized a bug, if start is in obstructions, that's now allowed, so remove it and decrement count
+        if (startcol, startrow) in obstructions:
+            obstructions.remove((startcol, startrow))
+            part2count -= 1
         print(f"Part 2: {part2count}")
 
 
