@@ -1,0 +1,1 @@
+../../inputs/test_input06.txt
