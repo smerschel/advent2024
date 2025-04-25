@@ -12,7 +12,7 @@ def next_step(possibles, var):
         newpossibles.append(i + var)
         newpossibles.append(i * var)
         # uncomment this line for part 2
-        # newpossibles.append(int(str(i)+str(var)))
+        newpossibles.append(int(str(i)+str(var)))
     return newpossibles
 
 def computes(line):
@@ -31,31 +31,6 @@ def computes(line):
     else:
         return False
        
-def concatenate(vars, strings):
-    # print strings
-    # print(f"add_var: {strings}")
-    # if vars is empty return strings
-    if len(vars) == 0:
-        return strings
-    else:
-        # pop the first variable from vars
-        var = vars.pop(0)
-        # for each string in strings, make two new strings
-        # one with a space followed by the variable and one with no space followed by the variable
-        newstrings = []
-        for string in strings:
-            newstrings.append(string + " " + var)
-            newstrings.append(string + var)
-        return concatenate(vars, newstrings)
-
-def make_strings(line):
-    result, varstr = line.split(":")
-    vars = varstr.split()
-    # grab just up to the colon (including the colon) and make a new string
-    var0 = vars.pop(0)
-    newstrings = concatenate(vars, [result + ": " + var0])
-    return newstrings
-
 if __name__ == "__main__":
     part2 = sys.argv[2] == "part2" if len(sys.argv) > 2 else False
     dev = sys.argv[3] == "dev" if len(sys.argv) > 3 else False
