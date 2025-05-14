@@ -1,1 +1,0 @@
-../../inputs/input07.txt
