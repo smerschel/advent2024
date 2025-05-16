@@ -4,7 +4,11 @@ use std::fs;
 use std::io::{self, BufRead};
 use std::path::Path;
 
-type Point = (usize, usize);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct Point {
+    x: isize,
+    y: isize,
+}
 
 /// Read a file into a 2D vector of characters
 fn read_file_to_2d_array(filename: &str) -> Vec<Vec<char>> {
@@ -24,11 +28,11 @@ fn read_file(filename: &str) -> String {
 }
 
 /// Check if a point is within grid bounds
-fn check_limits(anti: &(isize, isize), rows: usize, cols: usize) -> bool {
-    anti.0 >= 0 && 
-    anti.0 < cols as isize && 
-    anti.1 >= 0 && 
-    anti.1 < rows as isize
+fn check_limits(anti: &Point, rows: usize, cols: usize) -> bool {
+    anti.x >= 0 && 
+    anti.x < cols as isize && 
+    anti.y >= 0 && 
+    anti.y < rows as isize
 }
 
 /// Generate antinodes based on pairs of nodes
@@ -42,16 +46,16 @@ fn generate_antinodes(nodes: &HashMap<char, Vec<Point>>, rows: usize, cols: usiz
                 let b = points[j];
                 
                 // Calculate direction vector
-                let dx = a.0 as isize - b.0 as isize;
-                let dy = a.1 as isize - b.1 as isize;
+                let dx = a.x - b.x;
+                let dy = a.y - b.y;
                 
                 // Calculate potential antinodes
-                let anti1 = (a.0 as isize + dx, a.1 as isize + dy);
+                let anti1 = Point{x: a.x + dx, y: a.y + dy};
                 if check_limits(&anti1, rows, cols) {
                     antis.push(anti1);
                 }
                 
-                let anti2 = (b.0 as isize - dx, b.1 as isize - dy);
+                let anti2 = Point{x: b.x - dx, y: b.y - dy};
                 if check_limits(&anti2, rows, cols) {
                     antis.push(anti2);
                 }
@@ -59,12 +63,12 @@ fn generate_antinodes(nodes: &HashMap<char, Vec<Point>>, rows: usize, cols: usiz
         }
     }
     
-    // Remove duplicates by converting to a set
-    HashSet::<(isize, isize)>::from_iter(antis.into_iter()).len()
+    let unique: HashSet<Point> = HashSet::from_iter(antis.into_iter());
+    unique.len()
 }
 
 /// Get nodes on a line with a given slope and y-intercept
-fn get_nodes_on_line(slope: f64, yint: f64, rows: usize, cols: usize) -> Vec<(usize, usize)> {
+fn get_nodes_on_line(slope: f64, yint: f64, rows: usize, cols: usize) -> Vec<Point> {
     let mut antis = Vec::new();
     let mut x = 0.0;
     let mut y = yint;
@@ -77,7 +81,7 @@ fn get_nodes_on_line(slope: f64, yint: f64, rows: usize, cols: usize) -> Vec<(us
             
             // Check if y is in range
             if y_int >= 0 && y_int < rows as isize {
-                antis.push((x as usize, y_int as usize));
+                antis.push(Point{x: x as isize, y: y_int as isize});
             }
         }
         
@@ -99,13 +103,13 @@ fn generate_anti_with_resonance(nodes: &HashMap<char, Vec<Point>>, rows: usize, 
                 let b = points[j];
                 
                 // Avoid division by zero
-                if a.0 == b.0 {
+                if a.x == b.x {
                     continue;
                 }
                 
                 // Calculate slope and y-intercept
-                let slope = (a.1 as f64 - b.1 as f64) / (a.0 as f64 - b.0 as f64);
-                let yint = a.1 as f64 - slope * a.0 as f64;
+                let slope = (a.y as f64 - b.y as f64) / (a.x as f64 - b.x as f64);
+                let yint = a.y as f64 - slope * a.x as f64;
                 
                 // Get nodes on this line
                 let line_nodes = get_nodes_on_line(slope, yint, rows, cols);
@@ -115,7 +119,8 @@ fn generate_anti_with_resonance(nodes: &HashMap<char, Vec<Point>>, rows: usize, 
     }
     
     // Remove duplicates
-    HashSet::<(usize, usize)>::from_iter(antis.into_iter()).len()
+    let unique: HashSet<Point> = HashSet::from_iter(antis.into_iter());
+    unique.len()
 }
 
 fn main() {
@@ -139,7 +144,7 @@ fn main() {
             if val.is_alphanumeric() {
                 nodes.entry(val)
                      .or_insert_with(Vec::new)
-                     .push((j, i));
+                     .push(Point{x: j as isize, y: i as isize});
             }
         }
     }
