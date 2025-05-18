@@ -83,7 +83,10 @@ def compact_blocks(data):
 
 def fits(file, spaces):
     for space in spaces:
-        if space.size >= file.size and space.start < file.start:            
+        # we know the spaces increment in order, so we can break if they are "after" the file
+        if space.start > file.start:
+            break
+        if space.size >= file.size:            
             return space
     return None
 
