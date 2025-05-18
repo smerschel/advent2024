@@ -1,4 +1,18 @@
 import sys
+from dataclasses import dataclass
+
+@dataclass
+class File:
+    id: int
+    size: int
+    start: int
+    end: int
+
+@dataclass
+class Space:
+    size: int
+    start: int
+    end: int
 
 def read_file(name):
     with open(name, "r") as file:
@@ -25,6 +39,30 @@ def explode_blocks(data):
     #print(answer)
     return answer
 
+def explode_blocks2(data):
+    isFile = True
+    curIdx = 0
+    curFile = 0
+    files = []
+    spaces = []
+    # I want my data to be a little smarter to make the logic easier this time
+    # For each file, I want an ID, size, and start (and end, I guess)
+    # Then, I want a list of empty spaces, they don't need an ID, but the should have a size and start (and end?)
+    for c in data:
+        if isFile:
+            files.append(File(id=curFile, size=int(c), start=curIdx, end=curIdx+int(c)-1))
+            isFile = False
+            curIdx += int(c)
+            curFile += 1
+        else:
+            spaces.append(Space(size=int(c), start=curIdx, end=curIdx+int(c)-1))
+            isFile = True
+            curIdx += int(c)
+
+    #print(files)
+    #print(spaces)
+    return files,spaces
+
 def compact_blocks(data):
     # put a pointer at the end of the array and a pointer at the beginning,
     # start walking from the start and when you encounter a -1, move the value at the end to that location and start moving from the 
@@ -43,6 +81,41 @@ def compact_blocks(data):
     #print(data)
     return data
 
+def fits(file, spaces):
+    for space in spaces:
+        if space.size >= file.size and space.start < file.start:            
+            return space
+    return None
+
+def update(file, space):
+    space.size -= file.size
+    file.start = space.start
+    file.end = file.start + file.size - 1
+    space.start = file.end + 1
+
+def print_files(files):
+    end = 0
+    for file in files:
+       if file.end > end:
+           end = file.end
+    output = list('.' * end)
+    for file in files:
+        print (file)
+        output[file.start:file.end+1] = [str(file.id)] * file.size
+        print("".join(output))
+
+def compact_full_blocks(files, spaces):
+    # my reading of the problem is you start at the end of files and only go through it once moving full
+    # files to the earliest space they will completely fit, if any
+    for file in reversed(files):
+        space = fits(file, spaces)
+        if space is not None:
+            update(file, space)
+    #print(files)
+    #print(spaces)
+    #print_files(files)
+    return files
+
 def compute_answer(data):
     answer = 0
     for i,v in enumerate(data):
@@ -51,11 +124,11 @@ def compute_answer(data):
         answer += i*v
     return answer
 
-def compute_answer2(data):
+def compute_answer2(files):
     answer = 0
-    for i,v in enumerate(data):
-        if v > 0:
-            answer += i*v
+    for file in files:
+        for i in range(file.size):
+            answer += file.id * (file.start+i)
     return answer
 
 def solve_part1(data):
@@ -64,8 +137,9 @@ def solve_part1(data):
     return compute_answer(compressed_blox)
 
 def solve_part2(data):
-    exploded_blox = explode_blocks(data)
-    return compute_answer2(compressed_blox)
+    files,spaces = explode_blocks2(data)
+    files = compact_full_blocks(files,spaces)
+    return compute_answer2(files)
       
 if __name__ == "__main__":
     part2 = sys.argv[2] == "part2" if len(sys.argv) > 2 else False
