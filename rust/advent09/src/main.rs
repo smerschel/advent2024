@@ -24,37 +24,35 @@ fn main() -> std::io::Result<()> {
         eprintln!("Usage: {} <input_file>", args[0]);
     }
 
-    let mut data = fs::read_to_string(&args[1]).expect("Couldn't open file");
+    let data = fs::read_to_string(&args[1]).expect("Couldn't open file");
 
     let mut answer: i64 = part1(&data);
     dev_print!("Data {}", data);
     println!("Part 1 Answer: {}", answer);
-    answer = part2(&data);
+    answer = part2(&data) as i64;
     println!("Part 2 Answer: {}", answer);
     return Ok(());
 }
 
 fn part1(data: &String) -> i64 {
     let mut filesystem: Vec<i32> = Vec::new();
-    let mut isFile: bool = true;
-    let mut curIdx: u32 = 0;
-    let mut curFile: i32 = 0;
+    let mut is_file: bool = true;
+    let mut cur_idx: u32 = 0;
+    let mut cur_file: i32 = 0;
     // make filesystem vector
     for c in data.chars() {
         let digit = c.to_digit(10).expect("Got a non-digit character");
-        if isFile {
-            isFile = false;
+        if is_file {
+            is_file = false;
             for _ in 0..digit {
-                filesystem.push(curFile);
+                filesystem.push(cur_file);
             }
-            curFile += 1;
-            curIdx += digit;
+            cur_file += 1;
         } else {
-            isFile = true;
+            is_file = true;
             for _ in 0..digit {
                 filesystem.push(-1);
             }
-            curIdx += digit;
         }
     }    
     dev_print!("{:?}", filesystem);
@@ -92,26 +90,55 @@ fn part1(data: &String) -> i64 {
     return checksum;
 }
 
-fn part2(data: &String) -> i64 {
-    let mut isFile: bool = true;
+fn part2(data: &String) -> u64 {
+    let mut is_file: bool = true;
     let mut files: Vec<File> = Vec::new();
     let mut spaces: Vec<Space> = Vec::new(); 
-    let mut curIdx: u32 = 0;
-    let mut curFile: u32 = 0;
+    let mut cur_idx: u32 = 0;
+    let mut cur_file: u32 = 0;
 
+    // create files and spaces
     for c in data.chars() {
         let digit = c.to_digit(10).expect("Got a non-digit character");
-        if isFile {
-            isFile = false;
-            files.push(File {id: curFile, start: curIdx, size: digit});
-            curFile += 1;
-            curIdx += digit;
+        if is_file {
+            is_file = false;
+            files.push(File {id: cur_file, start: cur_idx, size: digit});
+            cur_file += 1;
+            cur_idx += digit;
         } else {
-            isFile = true;
-            spaces.push(Space {start: curIdx, size: digit});
-            curFile += 1;
-            curIdx += digit;
+            is_file = true;
+            spaces.push(Space {start: cur_idx, size: digit});
+            cur_idx += digit;
         }
     }
-    return 0;
+    dev_print!("{:?}", files);
+
+
+    // go through files from back to front, if there is space for the whole file, move it
+    let mut fileidx: i32 = files.len() as i32 - 1;
+    while fileidx >= 0 {
+        let mut spaceidx = 0;
+        while spaceidx < spaces.len() {
+            if spaces[spaceidx].start > files[fileidx as usize].start {
+                break;
+            }
+            if spaces[spaceidx].size >= files[fileidx as usize].size {
+                files[fileidx as usize].start = spaces[spaceidx].start;
+                spaces[spaceidx].start += files[fileidx as usize].size;
+                spaces[spaceidx].size -= files[fileidx as usize].size;
+            }
+            spaceidx += 1;
+        }
+        fileidx -= 1;
+    }
+
+    let mut checksum:u64 = 0;
+    // calculate checksum
+    for file in files.iter() {
+        for i in 0..file.size {
+            checksum += ((file.start+i) * file.id) as u64;
+        }
+    }
+
+    return checksum;
 }
